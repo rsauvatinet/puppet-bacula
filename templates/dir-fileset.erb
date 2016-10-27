@@ -15,6 +15,9 @@ FileSet {
 <% item.fetch('files').each do |file| -%>
     File = <%= file.inspect %>
 <% end -%>
+<% item.fetch('extras', {}).each do |key, value | -%>
+    <%= key %> = <%= (/^\w+$/ =~ value) ? value : value.inspect %>
+<% end -%>
   }
 <% end -%>
 
