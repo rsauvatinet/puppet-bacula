@@ -6,5 +6,12 @@ FileDaemon {
   Maximum Concurrent Jobs = <%= @max_concurrent_jobs %>
   Heartbeat Interval = <%= @heartbeat_interval %>
 
+<%- if @pki_enabled -%>
+  PKI Signatures = Yes
+  PKI Encryption = Yes
+  PKI Keypair = "<%= @pki_file %>"
+  PKI Master Key = "<%= @pki_master_file %>"
+
+<%- end -%>
 <%= scope.function_template(['bacula/tls.erb']) -%>
 }

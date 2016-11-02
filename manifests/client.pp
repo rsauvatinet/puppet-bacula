@@ -13,6 +13,8 @@ class bacula::client (
   $catalog = 'MainCatalog',
   $file_retention = '2 months',
   $job_retention = '6 months',
+  $pki_enabled = false,
+  $pki_master_key_content = undef,
 ) inherits bacula::params {
   include bacula::tls
   $cluster = $bacula::params::cluster
@@ -26,6 +28,39 @@ class bacula::client (
     enable  => true,
     name    => $service,
     require => Package['bacula-client'],
+  }
+
+  if $pki_enabled {
+    $pki_file = "${configdir}/ssl/${::fqdn}_pki.pem"
+    $pki_master_file = "${configdir}/ssl/pki_master.pem"
+    concat { $pki_file:
+      mode    => '0400',
+      owner   => 'root',
+      group   => 'root',
+      require => Package['bacula-client'],
+      notify  => Service['bacula-client'],
+    }
+
+    concat::fragment { "${pki_file}_cert":
+      target => $pki_file,
+      source => $::bacula::tls::cert,
+      order  => '10',
+    }
+    concat::fragment { "${pki_file}_key":
+      target => $pki_file,
+      source => $::bacula::tls::key,
+      order  => '20',
+    }
+
+    file { $pki_master_file:
+      ensure  => file,
+      mode    => '0400',
+      owner   => 'root',
+      group   => 'root',
+      content => $pki_master_key_content,
+      require => Package['bacula-client'],
+      notify  => Service['bacula-client'],
+    }
   }
 
   concat { $config:
@@ -51,6 +86,7 @@ class bacula::client (
   Bacula::Director::Client <<| cluster == $cluster |>>
   Bacula::Messages::Client <<| cluster == $cluster |>>
 
+  # Postgres backup
   $scriptdir = "${configdir}/scripts"
   file { $scriptdir:
     ensure  => directory,
