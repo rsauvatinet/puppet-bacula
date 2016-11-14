@@ -23,6 +23,7 @@ class bacula::director (
     ensure  => running,
     enable  => true,
     name    => $service,
+    restart => "/bin/bash -c '/usr/bin/bconsole < <(echo reload)'",
     require => Package['bacula-director'],
   }
 
